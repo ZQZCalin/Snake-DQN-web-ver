@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>html game</title>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <script src="js/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <!-- level 1: util functions -->
+    <script src="js/util.js" charset="utf-8"></script>
+    <!-- level 1: class files -->
+    <script src="js/snakeClass.js" charset="utf-8"></script>
+    <script src="js/snakeGameClass.js" charset="utf-8"></script>
+    <script src="js/agentClass.js" charset="utf-8"></script>
+    <script src="js/canvas.js" charset="utf-8"></script>
+    <script src="js/sprite.js" charset="utf-8"></script>
+    <!-- level 3: config -->
+    <script src="js/config.js" charset="utf-8"></script>
+    <!-- level 4: main -->
+    <script src="js/train.js" charset="utf-8"></script>
+    <script src="js/load_page.js" charset="utf-8"></script>
+
+    <script charset="utf-8">
+      $(document).ready(function() {
+          // load_DOM();
+      });
+
+      $(window).on('load', function() {
+          // visual: load page
+
+          // test:
+          var snake = new Snake(0, 0, 1, "L", 10, 400, 400);
+          console.log(snake);
+
+          var game_canvas = document.createElement('canvas');
+          game_canvas.setAttribute('id', 'game');
+          document.body.appendChild(game_canvas);
+
+          canvas1 = new HTML('game');
+          canvas1.setSize(400, 400);
+          canvas1.setPosition(100, 50);
+
+          var game1 = new snakeGame(
+              canvas1, 20, 20, 20, 10,
+              1, snakeSprite, appleSprite, wallSprite,
+              collideWall=true, collideBody=true, extraWalls=null,
+              stateType=0, rewardType=0, rewardValues=null,
+              manual=false
+          );
+
+          console.log(canvas1)
+          console.log(game1)
+          // game1.run();
+          // setTimeout(game1.end_game(), 1000);
+
+          var agent = new Agent(
+            12, 4, 0.95, 1.0, 0.995, 0.01, 0.00025
+          );
+          const x = tf.tensor2d([1,0,0,0,1,0,0,0,1,0,0,0], [1,12]);
+          const y = tf.tensor2d([1,1,0,0], [1,4]);
+          agent.model.fit(x,y);
+          var pred = agent.model.predict(x);
+          pred.print()
+          console.log(agent)
+
+          // if (VERBOSE) console.log('page loading completed');
+      });
+    </script>
+  </head>
+  <body>
+
+  </body>
+</html>

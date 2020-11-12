@@ -1,0 +1,85 @@
+body {
+  /* width: -webkit-fill-available; */
+  /* height: -webkit-fill-available; */
+  background-color: #E7E6E6;
+  object-fit: cover;
+}
+
+div#main {
+  position: relative;
+  margin: auto;
+  box-sizing: content-box;
+}
+
+div#pause_div {
+  z-index: 10;
+  background: rgba(118, 116, 116, 0.3);
+}
+
+div#start_div {
+  z-index: 10;
+  background: #CCCCCC;
+}
+
+canvas#score_board {
+  position: absolute;
+  margin: auto;
+  background: #F0F0F0;
+  /* border: 1px solid black; */
+    /* display: inline-flex; */
+}
+
+canvas#game {
+  position: absolute;
+  margin: auto;
+  background: lightgreen;
+  /* display: inline-flex; */
+}
+
+div#score_div {
+  position: absolute;
+}
+
+div#game_div {
+  position: absolute;
+  /* border: 1px solid black; */
+}
+
+div.button {
+  position: absolute;
+}
+
+.absolute {
+  position: absolute;
+}
+
+div#start_center_div {
+  background: #E7E5E5;
+  /* border: 3px dashed #737171; */
+  -webkit-box-shadow: 5px 5px 3px 0px rgba(0,0,0,0.3);
+}
+
+p.start_p {
+}
+
+button {
+  text-align: center;
+}
+
+#button_1 {
+  width: 100px;
+  height: 40px;
+  left: 190px;
+  top: 290px;
+  font-size: 18px;
+}
+
+p.p_error {
+  text-align: center;
+  color: red;
+  font-size: 12px;
+}
+
+::placeholder {
+  color: rgba(0, 0, 0, 0.3);
+}
