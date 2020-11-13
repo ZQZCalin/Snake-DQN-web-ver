@@ -29,7 +29,7 @@ canvas#score_board {
     /* display: inline-flex; */
 }
 
-canvas#game {
+canvas {
   position: absolute;
   margin: auto;
   background: lightgreen;

@@ -1,3 +1,5 @@
+// import * as tf from '@tensorflow/tfjs-node';
+
 class Deque extends Array {
     constructor(maxlen) {
         super();
@@ -70,31 +72,25 @@ class Agent {
     remember(state, action, reward, next_state, done){
         this.memory.pushDeque([state, action, reward, next_state, done]);
     }
-    //
-    // def remember(self, state, action, reward, next_state, done):
-    //     """
-    //     stores the game experience into this.memory
-    //         - parameters: s^t, a^t, r^t, s^{t+1}
-    //     """
-    //     this.memory.append([state, action, reward, next_state, done])
-    //
-    act(state) {
+
+    async act(state) {
         // state: tenser2d of size [1,state_size]
         if (Math.random() <= this.epsilon) {
             return getRandInt(0, this.action_size);
         } else {
-            action = this.model.predict(state);
-            return null;
+            const action = await this.exploit(state);
+            return action;
         }
             // return np.argmax(act_value[0])
     }
 
-    //
-    // def exploit(self, state):
-    //     """
-    //     exploit entirely on DQN model without randomness
-    //     """
-    //     return np.argmax(this.model.predict(state)[0])
+    async exploit(state) {
+        const pred = await this.model.predict(state).reshape([this.action_size]);
+        const action = await pred.argMax().data();
+        // action is an array of size 1 -- [act]
+        return action[0];
+    }
+
     //
     // def replay(self, batch_size):
     //     """
@@ -135,11 +131,15 @@ class Agent {
     //     """
     //     this.model.load_weights(name)
     //
-    // def save(self, name):
-    //     """
-    //     save model weights
-    //     """
-    //     this.model.save_weights(name)
+
+    async save_model(fname) {
+        await this.model.save("downloads://" + fname);
+    }
+
+    async load_model(fname) {
+        this.model = await tf.loadLayersModel("localstorage://" + fname);
+    }
+
 
 
 }

@@ -7,43 +7,58 @@
 */
 
 class snakeGame {
-    constructor(
-        canvas, width, height, gridSize, FPS,
-        snakeLength, snakeSprite, appleSprite, wallSprite,
-        collideWall=true, collideBody=true, extraWalls=null,
-        stateType=0, rewardType=0, rewardValues=null,
-        manual=true
-    ) {
-        // Game-side Attributes
-        this.canvas = canvas;
+    constructor(params) {
+        // defaults
+        this.FPS = 10;
+        this.snakeLength = 3;
+
+        this.collideWall = true;
+        this.collideBody = true;
+        this.extraWalls = null;
+
+        this.snakeSprite = new colorGrid("green");
+        this.appleSprite = new colorGrid("red");
+        this.wallSprite = new colorGrid("black");
+
+        this.manual = true;
+
+        this.stateType = "12bool";
+        this.rewardType = "eat-die-close-away";
+        this.rewardValues = [10, -100, 1, -1];
+
+        for (var key in params) {
+            // Game-side Attributes
+            if (key == "collideWall") this.collideWall = params[key];
+            if (key == "collideBody") this.collideBody = params[key];
+            if (key == "extraWalls") this.extraWalls = params[key];
+
+            if (key == "snakeSprite") this.snakeSprite = params[key];
+            if (key == "appleSprite") this.appleSprite = params[key];
+            if (key == "wallSprite") this.wallSprite = params[key];
+
+            if (key == "FPS") this.FPS = params[key];
+
+            // Train-side Attributes
+            if (key == "stateType") this.stateType = params[key];
+            if (key == "rewardType") this.rewardType = params[key];
+            if (key == "rewardValues") this.rewardValues = params[key];
+
+            // Game Elements
+            if (key == "snakeLength") this.snakeLength = params[key];
+            if (key == "manual") this.manual = params[key];
+        }
+
+        // Mandatory
+        this.canvas = params["canvas"];
         this.dpr = this.canvas.dpr;
-        this.gridSize = gridSize * this.dpr;
-        this.width = width * this.gridSize;
-        this.height = height * this.gridSize;
+        this.gridSize = params["gridSize"] * this.dpr;
+        this.width = params["width"] * this.gridSize;
+        this.height = params["height"] * this.gridSize;
 
-        this.collideWall = collideWall;
-        this.collideBody = collideBody;
-        this.extraWalls = extraWalls;
+        this.extraWalls = generateExtraWalls(this.extraWalls, this.gridSize, true);
 
-        this.FPS = FPS;
+        // initialize
         this.timer = null;
-
-        // Train-side Attributes
-        this.stateType = stateType;
-        this.rewardType = rewardType;
-        this.rewardValues = rewardValues;
-
-        // if (this.stateType == 0) {
-        //     this.state = np.zeros((12,));
-        //     this.state_size = 12;
-        // }
-        // this.action_size = 4
-
-        // Game Elements
-        this.snakeLength = snakeLength;
-        this.snakeSprite = snakeSprite;
-        this.appleSprite = appleSprite;
-        this.wallSprite = wallSprite;
 
         this.snake = null;
         this.apple = null;
@@ -55,7 +70,11 @@ class snakeGame {
 
         this.reset();
         this.render();
-        if (manual) this.keyboard_events();
+
+        if (this.manual) {
+            // player mode
+            this.keyboard_events();
+        }
     }
 
     // STATICS
@@ -69,12 +88,77 @@ class snakeGame {
       return DIRECTION_ARR.indexOf(direction);
     }
 
-    // functions
-    set_canvas() {
-        return null;
+    // state space
+    update_state() {
+        if (this.stateType == "12bool") {
+            return this.update_state_12bool().print();
+        }
+    }
+    
+    update_state_12bool() {
+        // return a js array
+        // update state from this.snake and this.apple
+        // called after this.snake and this.apple are updated
+        var new_state = Array(12).fill(0);
+
+        // Direction of Snake
+        if (this.snake.direction == "U") {
+            new_state[0] = 1;
+        } else if (this.snake.direction == "R") {
+            new_state[1] = 1;
+        } else if (this.snake.direction == "D") {
+            new_state[2] = 1;
+        } else if (this.snake.direction == "L") {
+            new_state[3] = 1;
+        }
+
+        // Apple position (wrt snake head)
+        // (0,0) at Top-Left Corner: U: -y; R: +x
+        if (this.apple.y < this.snake.y) {
+            // apple north snake
+            new_state[4] = 1
+        }
+        if (this.apple.x > this.snake.x) {
+            // apple east snake
+            new_state[5] = 1
+        }
+        if (this.apple.y > this.snake.y) {
+            // apple south snake
+            new_state[6] = 1
+        }
+        if (this.apple.x < this.snake.x) {
+            // apple west snake
+            new_state[7] = 1
+        }
+
+        // Obstacle (Walls, body) position (wrt snake head)
+        var test_snake;
+        const test_case = {
+            "U": {oppo: "D", x: 0, y: -this.gridSize, state: 8},
+            "R": {oppo: "L", x: this.gridSize, y: 0, state: 9},
+            "D": {oppo: "U", x: 0, y: this.gridSize, state: 10},
+            "L": {oppo: "R", x: -this.gridSize, y: 0, state: 11}
+        };
+        for (var key in test_case) {
+            var test = test_case[key];
+            if (this.snake.direction != test["oppo"]) {
+                test_snake = new Snake(
+                    this.snake.x + test["x"], this.snake.y + test["y"], 
+                    1, "U", this.gridSize, this.width, this.height
+                )
+                if (test_snake.collideWithWall(this.extraWalls)) {
+                    new_state[test["state"]] = 1;
+                }
+            }
+        }
+        return tf.tensor2d(new_state, [1,12]);
     }
 
+    // reward function
+
+    // functions
     reset() {
+        // return a js array
         this.done = 0;
         this.score = 0;
 
@@ -85,74 +169,20 @@ class snakeGame {
             this.width, this.height
         );
 
-        this.apple = new Apple(
-            this.gridSize,
-            getRandInt(0, this.width, this.gridSize),
-            getRandInt(0, this.height, this.gridSize),
-            this.width, this.height
-        );
+        this.apple = new Apple(this.gridSize, 0, 0, this.width, this.height);
+        this.move_apple();
 
         // add update_state if used for training
         return this.update_state();
     }
 
-    /*
-    def update_state(self):
-        # update state from this.snake and this.apple
-        # called after this.snake and this.apple are updated
-        new_state = np.zeros((this.state_size, ))
-
-        # Direction of Snake
-        if this.snake.direction == "U":
-            new_state[0] = 1
-        if this.snake.direction == "R":
-            new_state[1] = 1
-        if this.snake.direction == "D":
-            new_state[2] = 1
-        if this.snake.direction == "L":
-            new_state[3] = 1
-
-        # Apple position (wrt snake head)
-        # (0,0) at Top-Left Corner: U: -y; R: +x
-        if this.apple.y < this.snake.y:
-            # apple north snake
-            new_state[4] = 1
-        if this.apple.x > this.snake.x:
-            # apple east snake
-            new_state[5] = 1
-        if this.apple.y > this.snake.y:
-            # apple south snake
-            new_state[6] = 1
-        if this.apple.x < this.snake.x:
-            # apple west snake
-            new_state[7] = 1
-
-        # Obstacle (Walls, body) position (wrt snake head)
-        body_x = [rect.x for rect in this.snake.body]
-        body_y = [rect.y for rect in this.snake.body]
-        body_pos = [(rect.x, rect.y) for rect in this.snake.body]
-        if this.snake.direction != "D" and \
-        (this.snake.y <= 0 or (this.snake.x, this.snake.y-GRIDSIZE) in body_pos):
-            # obstacle at north
-            new_state[8] = 1
-        if this.snake.direction != "L" and \
-        (this.snake.x >= WIDTH-GRIDSIZE or (this.snake.x+GRIDSIZE, this.snake.y) in body_pos):
-            # obstacle at east
-            new_state[9] = 1
-        if this.snake.direction != "U" and \
-        (this.snake.y >= HEIGHT-GRIDSIZE or (this.snake.x, this.snake.y+GRIDSIZE) in body_pos):
-            # obstacle at south
-            new_state[10] = 1
-        if this.snake.direction != "R" and \
-        (this.snake.x <= 0 or (this.snake.x-GRIDSIZE, this.snake.y) in body_pos):
-            # obstacle at west
-            new_state[11] = 1
-
-        this.state = new_state
-        return this.state
-    */
-    update_state() {
-        return null;
+    move_apple() {
+        var avoid = this.snake.body.map(part => [part.x, part.y]);
+        if (this.extraWalls != null){
+            var avoid_wall = this.extraWalls.map(part => [part.x, part.y]);
+            avoid = avoid.concat(avoid_wall);
+        }
+        this.apple.move(avoid);
     }
 
     update_score() {
@@ -241,15 +271,17 @@ class snakeGame {
     render() {
         var context = this.canvas.context;
         context.clearRect(0,0,this.width,this.height);
-        // draw extra wall
+        // snake
+        this.snake.body.forEach((part, i) => {
+            part.draw(context, this.snakeSprite);
+        });
+        // extra wall
         if (this.extraWalls != null){
             this.extraWalls.forEach((part, i) => {
                 part.draw(context, this.wallSprite);
             });
         }
-        this.snake.body.forEach((part, i) => {
-            part.draw(context, this.snakeSprite);
-        });
+        // apple
         this.apple.rect.draw(context, this.appleSprite);
     }
 
@@ -271,25 +303,31 @@ class snakeGame {
         // move
         this.snake.addHead(this.collideWall);
         // round conclude
-        if (this.snake.collideWithBody()
-        || this.snake.collideWithWall()) {
+        if (this.snake.collideWithWall(this.extraWalls)) {
+            this.done = 1;
+            this.end_game();
+            this.render();
+            return;
+        }
+        // new time logic
+        const tempTail = this.snake.deleteTail();
+        if (this.snake.collideWithBody()) {
             this.done = 1;
             this.end_game();
         }
         if (this.snake.head.collideRect(this.apple.rect)) {
-            var avoid = this.snake.body.map(part => [part.x, part.y]);
-            if (this.extraWalls != null){
-                var avoid_wall = this.extraWalls.map(part => [part.x, part.y]);
-                avoid = avoid.concat(avoid_wall);
-            }
-            console.log(avoid);
-            this.apple.move(avoid);
+            // add tail back
+            this.snake.addTail(tempTail);
+            // move apple
+            this.move_apple();
+
             this.score += 1;
             if (this.score > this.best_score) {
                 this.best_score = this.score;
             }
         } else {
-          this.snake.deleteTail();
+            // no longer needs to deleteTail() because we use another time logic
+            // this.snake.deleteTail();
         }
         // render
         this.render();

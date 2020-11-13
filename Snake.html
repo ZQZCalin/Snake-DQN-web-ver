@@ -17,7 +17,7 @@
     <!-- level 3: config -->
     <script src="js/config.js" charset="utf-8"></script>
     <!-- level 4: main -->
-    <script src="js/train.js" charset="utf-8"></script>
+    <!-- <script src="js/train.js" charset="utf-8"></script> -->
     <script src="js/load_page.js" charset="utf-8"></script>
 
     <script charset="utf-8">
@@ -26,44 +26,50 @@
       });
 
       $(window).on('load', function() {
-          // visual: load page
+        // visual: load page
 
-          // test:
-          var snake = new Snake(0, 0, 1, "L", 10, 400, 400);
-          console.log(snake);
+        // performance array
+        var performance = [["episode", "score", "moves", "cumulative reward"]];
+        var savePerformanceButton = document.createElement("button");
+        savePerformanceButton.setAttribute("name", "save_performance");
+        savePerformanceButton.textContent = "click to save performance";
+        document.body.appendChild(savePerformanceButton);
+        
+        savePerformanceButton.addEventListener("click", event => {
+          download(to_csv(performance), "performance.csv");
+        });
 
-          var game_canvas = document.createElement('canvas');
-          game_canvas.setAttribute('id', 'game');
-          document.body.appendChild(game_canvas);
+        // create environment
+        var game_canvas = document.createElement('canvas');
+        game_canvas.setAttribute('id', 'snake_canvas');
+        document.body.appendChild(game_canvas);
 
-          canvas1 = new HTML('game');
-          canvas1.setSize(400, 400);
-          canvas1.setPosition(100, 50);
+        canvas = new HTML("snake_canvas");
+        canvas.setSize(CANVAS_WIDTH*GRID_SIZE, CANVAS_HEIGHT*GRID_SIZE);
+        canvas.setPosition(100, 50);
 
-          var game1 = new snakeGame(
-              canvas1, 20, 20, 20, 10,
-              1, snakeSprite, appleSprite, wallSprite,
-              collideWall=true, collideBody=true, extraWalls=null,
-              stateType=0, rewardType=0, rewardValues=null,
-              manual=false
-          );
+        env_params = {
+          canvas: canvas, 
+          width: CANVAS_WIDTH, height: CANVAS_HEIGHT, gridSize: GRID_SIZE, 
+          FPS: MANUAL_FPS,
+          snakeLength: SNAKE_LENGTH, 
+          // snakeSprite: snakeSprite, appleSprite: appleSprite, wallSprite: wallSprite,
+          // collideWall: COLLIDE_WALL, collideBody: COLLIDE_BODY, 
+          extraWalls: generateExtraWalls(EXTRA_WALL, GRID_SIZE, WALL_PIX_POS),
+          // stateType=0, rewardType=0, rewardValues=null,
+          manual: MANUAL
+        };
 
-          console.log(canvas1)
-          console.log(game1)
-          // game1.run();
-          // setTimeout(game1.end_game(), 1000);
+        var env = new snakeGame(env_params);
+        console.log(env.collideWall, env.extraWalls);
 
-          var agent = new Agent(
-            12, 4, 0.95, 1.0, 0.995, 0.01, 0.00025
-          );
-          const x = tf.tensor2d([1,0,0,0,1,0,0,0,1,0,0,0], [1,12]);
-          const y = tf.tensor2d([1,1,0,0], [1,4]);
-          agent.model.fit(x,y);
-          var pred = agent.model.predict(x);
-          pred.print()
-          console.log(agent)
+        // train environment 
+        train_params = {
+          batch_size: 32, n_episodes: 50, max_moves: 500, last_episode: 0,
+          exp_replay: true
+        };
 
-          // if (VERBOSE) console.log('page loading completed');
+
       });
     </script>
   </head>

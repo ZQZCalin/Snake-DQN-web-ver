@@ -3,6 +3,23 @@
 2. (0,0) is at the TOP-LEFT corner
 */
 
+class colorGrid {
+    constructor(color) {
+        const colorList = {
+            red: "#B22222", purple: "#4B0082", green: "#9ACD32",
+            blue: "#6495ED", yellow: "#DAA520", black: "#333333",
+        };
+        if (color in colorList) {
+            this.color = colorList[color];
+        } else {
+            this.color = color;
+        }
+    }
+    draw(ctx, x, y, w, h) {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(x, y, w, h);
+    }
+}
 
 class Rect {
     constructor(x, y, w, h){
