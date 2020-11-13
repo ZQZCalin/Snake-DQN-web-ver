@@ -63,7 +63,9 @@
         };
 
         var env = new snakeGame(env_params);
-        env.run();
+        // env.manual_play();
+        console.log(env.step(1));
+        env.step(1)[0].print();
 
         // train environment 
         train_params = {

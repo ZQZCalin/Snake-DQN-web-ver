@@ -116,6 +116,19 @@ class Snake {
         }
     }
 
+    // change direction
+    changeDirection(direction) {
+        // input: direction in [0, 1, 2, 3]
+        const DIRECTION = ["U", "R", "D", "L"];
+
+        const current = DIRECTION.indexOf(this.direction);
+        const opposite = (current + 2) % 4;
+
+        if (direction != opposite && direction != current) {
+            this.direction = DIRECTION[direction];
+        }
+    }
+
     // move a step forward
     addHead(collideWall=true) {
         var k1 = 0; var k2 = 0;

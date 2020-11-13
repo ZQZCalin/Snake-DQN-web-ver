@@ -70,3 +70,9 @@ function generateExtraWalls(array2d, size, pix) {
     });
     return walls;
 }
+
+function euclidean(p1, p2) {
+    const [x1, y1] = p1;
+    const [x2, y2] = p2;
+    return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
+}

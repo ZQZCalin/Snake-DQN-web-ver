@@ -14,7 +14,7 @@ const EXTRA_WALL = [
 ];
 // const WALL_PIX_POS = true; // assume to be always true
 
-const MANUAL = true;
+const MANUAL = false;
 
 const snakeSprite = new Sprite("image/skin_1.png");
 const appleSprite = new Sprite("image/star.png");

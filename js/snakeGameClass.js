@@ -24,7 +24,9 @@ class snakeGame {
 
         this.stateType = "12bool";
         this.rewardType = "eat-die-close-away";
-        this.rewardValues = [10, -100, 1, -1];
+        this.rewardValues = {
+            eat: 10, die: -100, closer: 1, away: -1
+        };
 
         for (var key in params) {
             // Game-side Attributes
@@ -69,12 +71,19 @@ class snakeGame {
         this.key_pressed = 0;
 
         this.reset();
-        this.render();
+        // this.render(); // now move render() inside reset()
 
         if (this.manual) {
             // player mode
             this.keyboard_events();
         }
+
+        // attributes to compute reward
+        this.last_snake = null;
+        this.last_apple = null;
+        this.rewardMeasures = {
+            eat: 0, closer: 0, away: 0
+        };
     }
 
     // STATICS
@@ -91,7 +100,7 @@ class snakeGame {
     // state space
     update_state() {
         if (this.stateType == "12bool") {
-            return this.update_state_12bool().print();
+            return this.update_state_12bool();
         }
     }
     
@@ -155,6 +164,29 @@ class snakeGame {
     }
 
     // reward function
+    reward() {
+        if (this.rewardType == "eat-die-close-away") {
+            return this.reward_basic();
+        }
+    }
+
+    reward_basic() {
+        const value = this.rewardValues;
+        const check = this.rewardMeasures;
+
+        if (this.done) return value["die"];
+        if (check["eat"]) return value["eat"];
+        if (check["closer"]) return value["closer"];
+        if (check["away"]) return value["away"];
+        return 0;
+    }
+
+    clear_reward() {
+        // reset reward_measures
+        for (var key in this.rewardMeasures) {
+            this.rewardMeasures[key] = 0;
+        }
+    }
 
     // functions
     reset() {
@@ -172,6 +204,8 @@ class snakeGame {
         this.apple = new Apple(this.gridSize, 0, 0, this.width, this.height);
         this.move_apple();
 
+        this.render()
+        
         // add update_state if used for training
         return this.update_state();
     }
@@ -190,84 +224,6 @@ class snakeGame {
         return this.score;
     }
 
-/*
-    def reward(self, state, next_state):
-        # test reward function 1:
-        # score of apple v.s. snake, lower score means closer
-        s1 = np.sum(state[4:8])
-        s2 = np.sum(next_state[4:8])
-
-        if s1 < s2:
-            # far away from apple
-            return -1
-        if s1 > s2:
-            # closer to apple
-            return 1
-
-        # other cases
-        return 0
-
-    def step(self, action):
-        """
-        about reward:
-        Two base rewards:
-        - die: -100
-        - get apple: 10
-        Additional rewards:
-        - NAIVE:
-            - closer to apple: 1
-            - away from apple: -1
-        - DETECT_ENCLOSE:
-            -
-        """
-
-        # BE VERY CAREFUL ABOUT THE POSITION & POINTER ISSUES !!!!!
-
-        if this.done:
-            return
-
-        current_state = this.state
-        current_snake = this.snake
-        pos_current = [current_snake.x, current_snake.y]
-
-        reward_ = 0
-
-        # update direction
-        # opposite_direction = (DIRECTION_INVERSE[this.snake.direction] + 2) % 4
-        if action != (DIRECTION_INVERSE[this.snake.direction] + 2) % 4:
-            this.snake.direction = DIRECTION[action]
-
-        # update game/motion, done, and reward_
-        this.snake.addHead()
-        if this.snake.isDead() or this.snake.isOutOfBounds(WIDTH, HEIGHT):
-            # game-over
-            this.done = 1
-            reward_ = -100
-        if not(this.snake.head.colliderect(this.apple.rect)):
-            # not eat apple
-            this.snake.deleteTail()
-        else:
-            # eat apple
-            avoid = [(rect.x, rect.y) for rect in this.snake.body]
-            this.apple.move(avoid=avoid)
-            reward_ = 10
-
-        next_state = this.update_state()
-
-        if reward_ == 0:
-            pos_next = [this.snake.x, this.snake.y]
-            pos_apple = [this.apple.x, this.apple.y]
-            d1 = euclidean(pos_apple, pos_current)
-            d2 = euclidean(pos_apple, pos_next)
-
-            if d1 > d2:
-                reward_ = 1
-            else:
-                reward_ = -1
-
-        return next_state, reward_, this.done, this.update_score()
-*/
-
     render() {
         var context = this.canvas.context;
         context.clearRect(0,0,this.width,this.height);
@@ -285,42 +241,57 @@ class snakeGame {
         this.apple.rect.draw(context, this.appleSprite);
     }
 
-    run() {
+    manual_play() {
         // store value of this
         var self = this;
         this.timer = setInterval(function(){
-            self.forward_manual();
+            self.step();
             self.key_pressed = 0;
         }, 1000/this.FPS);
     }
 
     end_game() {
-        clearInterval(this.timer);
-        console.log("You DIED!");
+        this.done = 1;
+        if (this.manual) {
+            clearInterval(this.timer);
+            console.log("You DIED!");
+        } else {
+
+        }
     }
 
-    forward_manual() {
+    step(action=null) {
+        if (this.done) return;
+
+        // training purpose: change direction
+        if (!(this.manual) && action != null) {
+            // action: integer in [0, 1, 2, 3]
+            this.snake.changeDirection(action);
+            this.last_snake = this.snake.head;
+            this.last_apple = this.apple.rect;
+        }
+
         // move
         this.snake.addHead(this.collideWall);
-        // round conclude
+
+        // wall collision
+        var tempTail;
         if (this.snake.collideWithWall(this.extraWalls)) {
-            this.done = 1;
             this.end_game();
-            this.render();
-            return;
+        } else {
+            tempTail = this.snake.deleteTail();
         }
-        // new time logic
-        const tempTail = this.snake.deleteTail();
+        // body collision
         if (this.snake.collideWithBody()) {
-            this.done = 1;
             this.end_game();
         }
+        // eat apple
         if (this.snake.head.collideRect(this.apple.rect)) {
             // add tail back
             this.snake.addTail(tempTail);
             // move apple
             this.move_apple();
-
+            // update game values (score)
             this.score += 1;
             if (this.score > this.best_score) {
                 this.best_score = this.score;
@@ -329,8 +300,44 @@ class snakeGame {
             // no longer needs to deleteTail() because we use another time logic
             // this.snake.deleteTail();
         }
+
         // render
         this.render();
+
+        // conclude round
+        if (this.manual) {
+            return null;
+        } else {
+            return this.conclude_step();
+        }
+    }
+
+    conclude_step() {
+        // update eat-apple: 1 if apple moves
+        this.rewardMeasures["eat"] = !(arrayEqual(
+            [this.last_apple.x, this.last_apple.y],
+            [this.apple.rect.x, this.apple.rect.y]
+        ));
+        // update closer or not
+        const last_distance = euclidean(
+            [this.last_snake.x, this.last_snake.y],
+            [this.last_apple.x, this.last_apple.y]
+        );
+        const distance = euclidean(
+            [this.snake.head.x, this.snake.head.y],
+            [this.apple.rect.x, this.apple.rect.y]
+        );
+        this.rewardMeasures["closer"] = distance < last_distance;
+        this.rewardMeasures["away"] = distance > last_distance;
+
+        // leave for future uss (if adding new rewards)
+
+        const next_state = this.update_state();
+        const reward = this.reward();
+        // clear reward measures
+        this.clear_reward();
+
+        return [next_state, reward, this.done, this.score];
     }
 
     keyboard_events() {
@@ -349,12 +356,7 @@ class snakeGame {
             const ARROW_ACTION = ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"];
             const key = ARROW_ACTION.indexOf(event.key);
 
-            // change direction if not opposite directoin
-            const current_key = this._action(this.snake.direction);
-            const opposite_key = (this._action(this.snake.direction) + 2) % 4;
-            if (key != opposite_key && key != current_key) {
-                this.snake.direction = this._direction(key);
-            }
+            this.snake.changeDirection(key);
         });
     }
 
