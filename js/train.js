@@ -11,6 +11,9 @@ async function train(
     const max_moves = params["max_moves"];
     const last_episode = params["last_episode"];
     const exp_replay = params["exp_replay"];
+
+    var performanceArray = [["episode", "score", "moves", "cumulative reward"]];
+
     // main
     var done = 0;
     for (var e = 1; e <= n_episodes; e++) {
@@ -37,18 +40,20 @@ async function train(
         }
 
         // training process
-        const processLog = "progress: {}/{}, score: {}, e: {:.2}, moves: {}/{}";
+        const processLog = "progress: {}/{}, score: {}, e: {}, moves: {}/{}";
         console.log(processLog.format(
             e, n_episodes, score, agent.episilon, move, max_moves
         ));
         // save performance
-        performance.push([
+        performanceArray.push([
             e + last_episode, score, move, cum_reward
         ]);
+        // console.log(performanceArray);
         // save model
-        if (e >= 15) {
+        if (e >= 15 && e%10 == 0) {
             agent.save_model("model_{}".format(e));
         }
     }
     console.log("Training Ended.")
+    return performanceArray;
 }

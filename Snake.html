@@ -16,6 +16,7 @@
     <script src="js/sprite.js" charset="utf-8"></script>
     <!-- level 3: config -->
     <script src="js/config.js" charset="utf-8"></script>
+    <script src="js/train.js" charset="utf-8"></script>
     <!-- level 4: main -->
     <!-- <script src="js/train.js" charset="utf-8"></script> -->
     <script src="js/load_page.js" charset="utf-8"></script>
@@ -31,14 +32,14 @@
         TEST_VERBOSE = 0;
 
         // performance array
-        var performance = [["episode", "score", "moves", "cumulative reward"]];
+        var performanceArray = [["episode", "score", "moves", "cumulative reward"]];
         var savePerformanceButton = document.createElement("button");
         savePerformanceButton.setAttribute("name", "save_performance");
         savePerformanceButton.textContent = "click to save performance";
         document.body.appendChild(savePerformanceButton);
         
         savePerformanceButton.addEventListener("click", event => {
-          download(to_csv(performance), "performance.csv");
+          download(to_csv(performanceArray), "performance.csv");
         });
 
         // create environment
@@ -67,11 +68,16 @@
         console.log(env.step(1));
         env.step(1)[0].print();
 
+        // create agent
+        var agent = new Agent(12, 4);
+
         // train environment 
         train_params = {
-          batch_size: 32, n_episodes: 50, max_moves: 500, last_episode: 0,
+          batch_size: 32, n_episodes: 10, max_moves: 500, last_episode: 0,
           exp_replay: true
         };
+
+        train(env, agent, train_params);
 
 
       });

@@ -91,6 +91,13 @@ class Agent {
         return action[0];
     }
 
+    async replay(batch_size) {
+        setTimeout(() => {
+            console.log("hi");
+            return null;
+        }, 1000);
+    }
+
     //
     // def replay(self, batch_size):
     //     """
