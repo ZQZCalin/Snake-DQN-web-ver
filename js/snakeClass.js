@@ -82,6 +82,8 @@ class Snake {
     // - direction
     // - boxSize
     // - body
+    direction = "U";
+    length = 1;
     constructor(x, y, length, direction, boxSize, board_x, board_y) {
         this.x = x;
         this.y = y;
@@ -139,7 +141,11 @@ class Snake {
     }
 
     deleteTail() {
-        this.body.pop();
+        return this.body.pop();
+    }
+
+    addTail(tail) {
+        this.body.push(tail);
     }
 
     collideWithBody() {
@@ -152,12 +158,22 @@ class Snake {
         return false;
     }
 
-    collideWithWall(wall) {
+    collideWithWall(extraWalls=null) {
+        // normal wall check
         var wallRect = new Rect(0, 0, this.board_x, this.board_y);
-        if (wallRect.contains([this.x, this.y])) {
-            return false;
+        if ( !(wallRect.contains([this.x, this.y])) ) {
+            return true;
         }
-        return true;
+        // extra wall check
+        if (extraWalls == null) return false;
+
+        var bool = false;
+        extraWalls.forEach(part => {
+            if (this.head.collideRect(part)) {
+                bool = true;
+            }
+        });
+        return bool;
     }
 
     addHead_snakeTwo(max_width, max_height) {

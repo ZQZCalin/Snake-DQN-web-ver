@@ -28,6 +28,8 @@
       $(window).on('load', function() {
         // visual: load page
 
+        TEST_VERBOSE = 0;
+
         // performance array
         var performance = [["episode", "score", "moves", "cumulative reward"]];
         var savePerformanceButton = document.createElement("button");
@@ -55,13 +57,13 @@
           snakeLength: SNAKE_LENGTH, 
           // snakeSprite: snakeSprite, appleSprite: appleSprite, wallSprite: wallSprite,
           // collideWall: COLLIDE_WALL, collideBody: COLLIDE_BODY, 
-          extraWalls: generateExtraWalls(EXTRA_WALL, GRID_SIZE, WALL_PIX_POS),
+          extraWalls: EXTRA_WALL,
           // stateType=0, rewardType=0, rewardValues=null,
           manual: MANUAL
         };
 
         var env = new snakeGame(env_params);
-        console.log(env.collideWall, env.extraWalls);
+        env.run();
 
         // train environment 
         train_params = {
