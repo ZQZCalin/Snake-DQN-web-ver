@@ -104,6 +104,9 @@ class Agent {
         const mini_batch = random_sample(this.memory, batch_size);
 
         for (var i = 0; i < mini_batch.length; i++) {
+            // test purpose
+            if (i % 100 == 0) console.log(i);
+
             var [state, action, reward, next_state, done] = mini_batch[i];
             // compute target
             var target = reward;
@@ -117,7 +120,6 @@ class Agent {
             await this.model.fit(state, target_state.reshape([1,this.action_size]), {"epochs": 1});
         }
         // decrease epsilon
-        console.log(this.epsilon);
         if (this.epsilon > this.epsilon_min) {
             this.epsilon *= this.epsilon_decay;
         }

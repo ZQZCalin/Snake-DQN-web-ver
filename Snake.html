@@ -32,7 +32,6 @@
         TEST_VERBOSE = 0;
 
         // performance array
-        var performanceArray = [["episode", "score", "moves", "cumulative reward"]];
         var savePerformanceButton = document.createElement("button");
         savePerformanceButton.setAttribute("name", "save_performance");
         savePerformanceButton.textContent = "click to save performance";
@@ -71,16 +70,16 @@
 
         // train environment 
         train_params = {
-          batch_size: 32, n_episodes: 3, max_moves: 500, last_episode: 0,
+          batch_size: 512, n_episodes: 100, max_moves: 2000, last_episode: 0,
           exp_replay: true
         };
 
-        async function wait(){
-          performanceArray = await train(env, agent, train_params);
-          console.log(performanceArray);
-        }
-        wait();
-
+        // async function wait(){
+        //   performanceArray = await train(env, agent, train_params);
+        //   console.log(performanceArray);
+        // }
+        // wait();
+        train(env, agent, train_params);
 
       });
     </script>

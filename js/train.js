@@ -1,5 +1,8 @@
 // import * as tf from '@tensorflow/tfjs-node';
 
+// global variable: array of performance
+var performanceArray = [["episode", "score", "moves", "cumulative reward"]];
+
 async function train(
     env, agent, params = {
     batch_size: 32, n_episodes: 50, max_moves: 500, last_episode: 0,
@@ -11,8 +14,6 @@ async function train(
     const max_moves = params["max_moves"];
     const last_episode = params["last_episode"];
     const exp_replay = params["exp_replay"];
-
-    var performanceArray = [["episode", "score", "moves", "cumulative reward"]];
 
     // main
     var done = 0;
@@ -50,7 +51,7 @@ async function train(
         ]);
         // console.log(performanceArray);
         // save model
-        if (e >= 15 && e%10 == 0) {
+        if (e >= 20 && e % 1 == 0) {
             agent.save_model("model_{}".format(e));
         }
     }
