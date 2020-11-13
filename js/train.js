@@ -24,7 +24,7 @@ async function train(
         for (var move = 1; move <= max_moves; move++) {
             // step forward
             const action = await agent.act(state);
-            var [next_state, reward, done, score] = await env.step(action);
+            var [next_state, reward, done, score] = env.step(action);
             agent.remember(state, action, reward, next_state, done);
             // update state 
             state = next_state;
@@ -42,7 +42,7 @@ async function train(
         // training process
         const processLog = "progress: {}/{}, score: {}, e: {}, moves: {}/{}";
         console.log(processLog.format(
-            e, n_episodes, score, agent.episilon, move, max_moves
+            e, n_episodes, score, agent.epsilon, move, max_moves
         ));
         // save performance
         performanceArray.push([
@@ -55,5 +55,7 @@ async function train(
         }
     }
     console.log("Training Ended.")
-    return performanceArray;
+    return new Promise((resolve, reject) => {
+        resolve(performanceArray);
+    })
 }

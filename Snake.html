@@ -65,19 +65,21 @@
 
         var env = new snakeGame(env_params);
         // env.manual_play();
-        console.log(env.step(1));
-        env.step(1)[0].print();
 
         // create agent
-        var agent = new Agent(12, 4);
+        var agent = new Agent({state_size:12, action_size:4});
 
         // train environment 
         train_params = {
-          batch_size: 32, n_episodes: 10, max_moves: 500, last_episode: 0,
+          batch_size: 32, n_episodes: 3, max_moves: 500, last_episode: 0,
           exp_replay: true
         };
 
-        train(env, agent, train_params);
+        async function wait(){
+          performanceArray = await train(env, agent, train_params);
+          console.log(performanceArray);
+        }
+        wait();
 
 
       });

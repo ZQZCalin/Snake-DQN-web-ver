@@ -76,3 +76,25 @@ function euclidean(p1, p2) {
     const [x2, y2] = p2;
     return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
 }
+
+function random_choice(array) {
+    const rand_idx = getRandInt(0, array.length);
+    return array[rand_idx];
+}
+
+function random_sample(array, batch_size) {
+    if (array.length < batch_size) return array;
+
+    var array_copy = array.map((item, i) => item);
+    var sample = [];
+    for (var i = 0; i < batch_size; i++) {
+        var rand_idx = getRandInt(0, array_copy.length);
+        sample.push(
+            array_copy.splice(rand_idx, 1)[0]
+        );
+    }
+    return sample;
+}
+
+// https://stackoverflow.com/questions/11488014/asynchronous-process-inside-a-javascript-for-loop
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
